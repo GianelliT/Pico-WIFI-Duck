@@ -1,0 +1,5 @@
+REM Open a terminal
+DEFAULT_DELAY 500
+GUI space
+STRING terminal
+ENTER

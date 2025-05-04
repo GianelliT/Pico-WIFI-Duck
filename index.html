@@ -1,129 +1,865 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pico  WIFI-Duck</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #36393e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pico WIFI-Duck</title>
+  <style>
+    :root {
+      --primary-color: #20c20e;
+      --primary-dark: #18980b;
+      --primary-light: rgba(32, 194, 14, 0.1);
+      --secondary-color: #ffc107;
+      --secondary-dark: #e6ac00;
+      --dark-bg: #1e1f22;
+      --darker-bg: #141517;
+      --light-text: #f8f9fa;
+      --muted-text: #a0a0a0;
+      --light-input: #2d2f33;
+      --border-radius: 8px;
+      --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --font-code: 'Courier New', Courier, monospace;
+      --box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: var(--font-main);
+      background-color: var(--dark-bg);
+      color: var(--light-text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    .header {
+      text-align: center;
+      padding: 2rem 0;
+      background-color: var(--darker-bg);
+      border-bottom: 3px solid var(--primary-color);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    
+    .header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(45deg, transparent 25%, rgba(32, 194, 14, 0.05) 25%, rgba(32, 194, 14, 0.05) 50%, transparent 50%, transparent 75%, rgba(32, 194, 14, 0.05) 75%);
+      background-size: 10px 10px;
+      opacity: 0.3;
+    }
+    
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    
+    .header h1 {
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+      color: var(--light-text);
+      margin: 0;
+      padding: 0;
+      display: inline-block;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .header h1 span {
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+    
+    .container {
+      flex: 1;
+      max-width: 900px;
+      width: 95%;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .editor-container {
+      background-color: var(--darker-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .editor-header {
+      background-color: #191a1c;
+      padding: 1rem 1.2rem;
+      border-bottom: 2px solid var(--primary-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .editor-header h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    
+    .editor-header h2::before {
+      content: "{}";
+      color: var(--primary-color);
+      font-family: var(--font-code);
+    }
+    
+    .editor-toolbar {
+      display: flex;
+      gap: 0.8rem;
+    }
+    
+    .toolbar-btn {
+      background: none;
+      border: none;
+      color: var(--light-text);
+      cursor: pointer;
+      font-size: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    
+    .toolbar-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--primary-color);
+    }
+    
+    .toolbar-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .toolbar-btn.new::after {
+      content: "📝";
+    }
+    
+    .toolbar-btn.clear::after {
+      content: "🗑️";
+    }
+    
+    .toolbar-btn.copy::after {
+      content: "📋";
+    }
+    
+    .editor-wrapper {
+      position: relative;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      overflow: hidden;
+    }
+    
+    .line-numbers {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 40px;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 1rem 6px 1rem 0;
+      font-family: var(--font-code);
+      font-size: 0.9rem;
+      color: var(--muted-text);
+      user-select: none;
+      overflow: hidden;
+    }
+    
+    .line-numbers span {
+      line-height: 1.5;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 350px;
+      padding: 1rem 1rem 1rem calc(40px + 1rem);
+      border: none;
+      background-color: var(--light-input);
+      color: var(--light-text);
+      font-family: var(--font-code);
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: vertical;
+      transition: var(--transition);
+    }
+    
+    textarea:focus {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(32, 194, 14, 0.3);
+    }
+    
+    .button-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .action-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background-color: var(--primary-color);
+      color: var(--darker-bg);
+      font-weight: 600;
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: var(--transition);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      min-width: 140px;
+    }
+    
+    .action-btn::before {
+      content: attr(data-icon);
+      font-weight: bold;
+    }
+    
+    .action-btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .action-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .action-btn.secondary {
+      background-color: var(--secondary-color);
+    }
+    
+    .action-btn.secondary:hover {
+      background-color: var(--secondary-dark);
+    }
+    
+    .action-btn.outline {
+      background-color: transparent;
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+    
+    .action-btn.outline:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .payload-select {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      background-color: var(--light-input);
+      color: var(--light-text);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      appearance: none;
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.2em;
+      cursor: pointer;
+      transition: var(--transition);
 
-        .form {
-        background-color:#2f3136;
-        height: 400px;
-        width: 400px;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        display: flex;
+    }
+    
+    .payload-select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(32, 194, 14, 0.3);
+    }
+    
+    .payload-select option {
+      background-color: var(--darker-bg);
+      color: var(--light-text);
+    }
+    
+    .status {
+      display: none;
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .status.success {
+      display: block;
+      background-color: rgba(32, 194, 14, 0.1);
+      border-left: 4px solid var(--primary-color);
+    }
+    
+    .status.error {
+      display: block;
+      background-color: rgba(255, 69, 58, 0.1);
+      border-left: 4px solid rgb(255, 69, 58);
+    }
+    
+    .status.warning {
+      display: block;
+      background-color: rgba(255, 193, 7, 0.1);
+      border-left: 4px solid var(--secondary-color);
+    }
+    
+    .status::before {
+      content: attr(data-icon);
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    
+    footer {
+      background-color: var(--darker-bg);
+      color: var(--muted-text);
+      text-align: center;
+      padding: 1.5rem;
+      margin-top: auto;
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    
+    footer a:hover {
+      color: var(--primary-light);
+      text-decoration: underline;
+    }
+    
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+      }
+      
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+      }
+      
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+      }
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: none;
+      border: none;
+      color: var(--light-text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: var(--transition);
+    }
+
+    @keyframes spinner {
+      to {transform: rotate(360deg);}
+    }
+    
+    .spinner:before {
+      content: '';
+      box-sizing: border-box;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin-top: -10px;
+      margin-left: -10px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      animation: spinner .8s ease infinite;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      
+      .connection-status {
+        display: none;
+      }
+      
+      .action-group {
         flex-direction: column;
-        align-items: center;
-}
-
-        textarea {
-                    color: #bfbfbf;
-            resize: vertical;
-            width: 100%;
-            height: 400px;
-            padding: 15px;
-            border: none;
-            border-radius: 4px;
-            background: #36393e;
-            font-family: "Courier New", Courier, monospace;
-            box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-        }
-
-        button {
-            background-color: #ffc107;
-            color: white;
-            padding: 14px 20px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background-color: #9f7e1c;
-        }
-        h1 {
-	font-size: 1.4rem;
-	margin-top: 1rem;
-	background:
-	#bfbfbf;
-	padding: 10px;
-	border-radius: 4px;
-	border-left: solid #20c20e 5px;
-	font-weight: 100;
-	letter-spacing: 5px;
-}
-  footer {
-            background-color: #2f3136;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-.title {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: balck;
-            position: absolute;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-    </style>
+      }
+      
+      .payload-select {
+        width: 100%;
+      }
+      
+      .action-btn {
+        width: 100%;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+      
+      .editor-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+      }
+      
+      .editor-toolbar {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+  </style>
 </head>
 <body>
-    <script>
-        function sendHttpRequest(data) {
-       console.log(data);
-        var url = "http://192.168.4.1/api" ;
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", url, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
+  
+  <header class="header">
+
+    <div class="logo">
+      <div class="logo-icon">🛜</div>
+      <h1>Pico <span>WiFi Duck</span></h1>
+    </div>
+    
+    <div class="connection-status">
+      <div class="status-indicator"></div>
+      <span>Connected</span>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="editor-container">
+      <div class="editor-header">
+        <h2>Payload Editor</h2>
+        <div class="editor-toolbar">
+          <button class="toolbar-btn new" id="newBtn" title="New payload"></button>
+          <button class="toolbar-btn clear" id="clearBtn" title="Clear editor"></button>
+          <button class="toolbar-btn copy" id="copyBtn" title="Copy to clipboard"></button>
+        </div>
+      </div>
       
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === XMLHttpRequest.DONE) {
-            if (xhr.status === 200) {
-              // Request was successful
-              console.log("Request sent successfully!");
-            } else {
-              // Request failed
-              console.error("Request failed. Status:", xhr.status);
-            }
-          }
-        };
+      <div class="editor-wrapper">
+        <div class="line-numbers" id="lineNumbers"></div>
+        <textarea id="payload" name="content" placeholder="// Enter your payload script here..." spellcheck="false"></textarea>
+      </div>
+    </div>
+    
+    <div class="button-panel">
+      <div class="action-group">
+        <button class="action-btn" id="runBtn" data-icon="▶️">Run</button>
+        <button class="action-btn secondary" id="saveBtn" data-icon="💾">Save</button>
+      </div>
       
-        xhr.send(JSON.stringify(data));
-      };
-      function main(){
-        var payload = document.getElementById("payload").value ;
-        var data = {username : "Payload" , content : payload} ;
-        sendHttpRequest(data) ;
+      <div class="action-group">
+        <select id="payloadList" class="payload-select">
+          <option value="">-- Select saved payload --</option>
+        </select>
+        <button class="action-btn outline" id="loadBtn" data-icon="📂">Load</button>
+      </div>
+    </div>
+    
+    <div id="statusMessage" class="status"></div>
+  </div>
+  
+  <footer>
+    <p>&copy; <span id="currentYear"></span> Gianelli Thomas </p>
+    <p class="mt-2 text-sm">Pico WiFi Duck v1.2.0</p>
+  </footer>
+  
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    const textarea = document.getElementById('payload');
+    const lineNumbers = document.getElementById('lineNumbers');
+    
+    function updateLineNumbers() {
+      const lines = textarea.value.split('\n');
+      lineNumbers.innerHTML = '';
+      
+      for (let i = 0; i < lines.length; i++) {
+        const span = document.createElement('span');
+        span.textContent = i + 1;
+        lineNumbers.appendChild(span);
       }
-    </script>
-<div class="title"><h1>Pico WiFi Duck</h1></div>
-    <div class="form">
-        <h1>Editor <a class="reload" id="editorReload"></a></h1>
-        <textarea id="payload" name="content" placeholder="Enter text here..."></textarea>
-        <button onclick="main()">RUN</button></div>
-  <footer style="background-color: #2f3136; color: white; text-align: center; padding: 10px;">
-        &copy; <span id="currentYear"></span> Majd Sassi | <a href="https://github.com/majdsassi/pico-wifi-duck">Github</a>
-    </footer>
+
+      const span = document.createElement('span');
+      span.textContent = lines.length + 1;
+      lineNumbers.appendChild(span);
+    }
+    
+    textarea.addEventListener('input', updateLineNumbers);
+    textarea.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = textarea.scrollTop;
+    });
+
+    updateLineNumbers();
+
+    document.getElementById('newBtn').addEventListener('click', function() {
+      if (textarea.value.trim() !== '' && !confirm('Are you sure you want to create a new payload? Unsaved changes will be lost.')) {
+        return;
+      }
+      textarea.value = '';
+      updateLineNumbers();
+      const statusMessage = document.getElementById('statusMessage');
+      statusMessage.textContent = 'New payload created!';
+      statusMessage.setAttribute('data-icon', '✓');
+      statusMessage.className = "status success";
+      setTimeout(() => {
+        statusMessage.className = "status";
+      }, 2000);
+    });
+
+    function sendHttpRequest(data) {
+      const url = "http://192.168.4.1/api";
+      const statusMessage = document.getElementById('statusMessage');
+      
+      statusMessage.className = "status warning";
+      statusMessage.textContent = 'Sending payload...';
+      statusMessage.setAttribute('data-icon', '⧗');
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.timeout = 20000;
+      
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          if (xhr.status === 200) {
+            statusMessage.textContent = 'Payload executed successfully!';
+            statusMessage.setAttribute('data-icon', '✓');
+            statusMessage.className = "status success";
+            setTimeout(() => {
+              statusMessage.className = "status";
+            }, 5000);
+          } else {
+            statusMessage.textContent = 'Error sending payload. Check your connection to WiFi Duck.';
+            statusMessage.setAttribute('data-icon', '⚠');
+            statusMessage.className = "status error";
+          }
+        }
+      };
+      
+      xhr.ontimeout = function() {
+        statusMessage.textContent = 'Request timed out. Make sure you\'re connected to the WiFi Duck network.';
+        statusMessage.setAttribute('data-icon', '⏱');
+        statusMessage.className = "status error";
+      };
+      
+      xhr.onerror = function() {
+        statusMessage.textContent = 'Network error. Are you connected to the WiFi Duck?';
+        statusMessage.setAttribute('data-icon', '✕');
+        statusMessage.className = "status error";
+      };
+      
+      xhr.send(JSON.stringify(data));
+    }
+
+    document.getElementById('runBtn').addEventListener('click', function() {
+      const payload = document.getElementById('payload').value;
+      if (payload.trim() === '') {
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = 'Please enter a payload before running.';
+        statusMessage.setAttribute('data-icon', '⚠');
+        statusMessage.className = "status error";
+        return;
+      }
+      
+      const data = {
+        username: "Payload",
+        content: payload
+      };
+      
+      sendHttpRequest(data);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function() {
+      if (textarea.value.trim() === '' || confirm('Are you sure you want to clear the editor?')) {
+        textarea.value = '';
+        updateLineNumbers();
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = 'Editor cleared!';
+        statusMessage.setAttribute('data-icon', '✓');
+        statusMessage.className = "status success";
+        setTimeout(() => {
+          statusMessage.className = "status";
+        }, 2000);
+      }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', function() {
+      const payloadText = document.getElementById('payload');
+      payloadText.select();
+      document.execCommand('copy');
+      
+      const statusMessage = document.getElementById('statusMessage');
+      statusMessage.textContent = 'Payload copied to clipboard!';
+      statusMessage.setAttribute('data-icon', '✓');
+      statusMessage.className = "status success";
+      setTimeout(() => {
+        statusMessage.className = "status";
+      }, 2000);
+    });
+    
+document.getElementById('saveBtn').addEventListener('click', function() {
+  const payload = document.getElementById('payload').value;
+  const statusMessage = document.getElementById('statusMessage');
+
+  if (payload.trim() === '') {
+    statusMessage.textContent = '⚠️ Nothing to save!';
+    statusMessage.setAttribute('data-icon', '⚠');
+    statusMessage.className = "status error";
+    return;
+  }
+
+  const choice = confirm("Click OK to save on Pico, or Cancel to download to your device.");
+
+  if (choice) {
+    let filename = prompt("Enter filename to save on Pico (e.g., payload1.txt):");
+    if (!filename || filename.trim() === '') {
+      statusMessage.textContent = "⚠️ Save cancelled.";
+      statusMessage.className = "status error";
+      return;
+    }
+
+    filename = filename.trim().replace(/[^a-zA-Z0-9_\-\.]/g, "_");
+
+    fetch("http://192.168.4.1/save_payload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: filename,
+        content: payload
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        statusMessage.textContent = `💾 ${filename} saved to Pico!`;
+        statusMessage.className = "status success";
+        fetchPayloadList?.();
+      } else {
+        statusMessage.textContent = `❌ Save failed: ${data.error || "Unknown error"}`;
+        statusMessage.className = "status error";
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      statusMessage.textContent = "❌ Network error while saving to Pico.";
+      statusMessage.className = "status error";
+    });
+
+  } else {
+    const blob = new Blob([payload], {type: 'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pico_wifi_duck_payload.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    statusMessage.textContent = 'Payload saved to your device!';
+    statusMessage.setAttribute('data-icon', '✓');
+    statusMessage.className = "status success";
+  }
+
+  setTimeout(() => {
+    statusMessage.className = "status";
+  }, 3000);
+});
+
+
+    document.getElementById('payload').addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        
+        this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 2;
+        
+        updateLineNumbers();
+      }
+    });
+
+    function fetchPayloadList() {
+      const statusMessage = document.getElementById('statusMessage');
+      const dropdown = document.getElementById("payloadList");
+      
+      fetch("http://192.168.4.1/list_payloads")
+        .then(response => response.json())
+        .then(data => {
+          dropdown.innerHTML = '<option value="">-- Select saved payload --</option>';
+          if (data.files && data.files.length > 0) {
+            data.files.forEach(file => {
+              const option = document.createElement("option");
+              option.value = file;
+              option.textContent = file;
+              dropdown.appendChild(option);
+            });
+            statusMessage.textContent = data.files.length + ' payloads available';
+            statusMessage.setAttribute('data-icon', 'ℹ');
+            statusMessage.className = "status success";
+            setTimeout(() => {
+              statusMessage.className = "status";
+            }, 3000);
+          } else {
+            const option = document.createElement("option");
+            option.disabled = true;
+            option.textContent = "No saved payloads found";
+            dropdown.appendChild(option);
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching payload list:", err);
+          statusMessage.textContent = 'Failed to fetch payloads. Check connection.';
+          statusMessage.setAttribute('data-icon', '⚠');
+          statusMessage.className = "status error";
+        });
+    }
+
+    function loadSelectedPayload() {
+      const filename = document.getElementById("payloadList").value;
+      const statusMessage = document.getElementById('statusMessage');
+      
+      if (!filename) {
+        statusMessage.textContent = 'Please select a payload to load';
+        statusMessage.setAttribute('data-icon', '⚠');
+        statusMessage.className = "status error";
+        return;
+      }
+
+      statusMessage.textContent = 'Loading payload...';
+      statusMessage.setAttribute('data-icon', '⧗');
+      statusMessage.className = "status warning";
+
+      fetch("http://192.168.4.1/load_payload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ filename })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.content) {
+          document.getElementById("payload").value = data.content;
+          updateLineNumbers();
+          statusMessage.textContent = 'Loaded "' + filename + '"';
+          statusMessage.setAttribute('data-icon', '✓');
+          statusMessage.className = "status success";
+          setTimeout(() => {
+            statusMessage.className = "status";
+          }, 3000);
+        } else {
+          statusMessage.textContent = 'Failed to load payload: ' + (data.error || 'Unknown error');
+          statusMessage.setAttribute('data-icon', '✕');
+          statusMessage.className = "status error";
+        }
+      })
+      .catch(err => {
+        console.error("Load error:", err);
+        statusMessage.textContent = 'Failed to load payload. Network error.';
+        statusMessage.setAttribute('data-icon', '✕');
+        statusMessage.className = "status error";
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", fetchPayloadList);
+
+    document.getElementById("loadBtn").addEventListener("click", loadSelectedPayload);
+
+    function checkConnectionStatus() {
+      const connectionStatus = document.querySelector('.connection-status span');
+      const statusIndicator = document.querySelector('.status-indicator');
+      
+      fetch("http://192.168.4.1/api", {
+        method: "HEAD",
+        cache: "no-cache"
+      })
+      .then(() => {
+        connectionStatus.textContent = "Disconnected";
+        statusIndicator.style.backgroundColor = "#F44336";
+      })
+      .catch(() => {
+        connectionStatus.textContent = "Connected";
+        statusIndicator.style.backgroundColor = "#4CAF50";
+      });
+    }
+
+    setInterval(checkConnectionStatus, 10000);
+    checkConnectionStatus();
+  </script>
 </body>
 </html>

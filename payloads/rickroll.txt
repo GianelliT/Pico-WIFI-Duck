@@ -1,0 +1,10 @@
+DELAY 1000
+GUI SPACE
+DELAY 500
+STRING Terminal
+ENTER
+DELAY 1000
+STRING nohup bash -c 'sleep 5; while true; do open -a Safari https://rickroll.it; sleep 10; done' >/dev/null 2>&1 &
+ENTER
+DELAY 500
+GUI Q

@@ -1,7 +1,7 @@
 import usb_hid
 from adafruit_hid.keyboard import Keyboard
-from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
-from adafruit_hid.keycode import Keycode
+from adafruit_hid.keyboard_layout_mac_fr import KeyboardLayout
+from adafruit_hid.keycode_mac_fr import Keycode
 import time
 import digitalio
 from board import *
@@ -74,7 +74,7 @@ def exe(Payload_Script):
             runScriptLine(newScriptLine)
 
     kbd = Keyboard(usb_hid.devices)
-    layout = KeyboardLayoutUS(kbd)
+    layout = KeyboardLayout(kbd)
 
     # sleep at the start to allow the device to be recognized by the host computer
     time.sleep(.5)
