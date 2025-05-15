@@ -165,10 +165,6 @@
       content: "📝";
     }
     
-    .toolbar-btn.clear::after {
-      content: "🗑️";
-    }
-    
     .toolbar-btn.copy::after {
       content: "📋";
     }
@@ -410,40 +406,6 @@
       }
     }
 
-    .theme-toggle {
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
-      background: none;
-      border: none;
-      color: var(--light-text);
-      font-size: 1.2rem;
-      cursor: pointer;
-      opacity: 0.7;
-      transition: var(--transition);
-    }
-
-    @keyframes spinner {
-      to {transform: rotate(360deg);}
-    }
-    
-    .spinner:before {
-      content: '';
-      box-sizing: border-box;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      margin-top: -10px;
-      margin-left: -10px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      border-top-color: var(--primary-color);
-      border-bottom-color: var(--primary-color);
-      animation: spinner .8s ease infinite;
-    }
-
     @media (max-width: 768px) {
       .header h1 {
         font-size: 1.8rem;
@@ -452,7 +414,7 @@
       .connection-status {
         display: none;
       }
-      
+      t
       .action-group {
         flex-direction: column;
       }
@@ -505,7 +467,6 @@
         <h2>Payload Editor</h2>
         <div class="editor-toolbar">
           <button class="toolbar-btn new" id="newBtn" title="New payload"></button>
-          <button class="toolbar-btn clear" id="clearBtn" title="Clear editor"></button>
           <button class="toolbar-btn copy" id="copyBtn" title="Copy to clipboard"></button>
         </div>
       </div>
@@ -534,7 +495,7 @@
   </div>
   
   <footer>
-    <p>&copy; <span id="currentYear"></span> Gianelli Thomas </p>
+    <p>&copy; <span id="currentYear"></span> Gianelli Thomas | <a href="https://gianelli.net" target="_blank">Website</a></p>
     <p class="mt-2 text-sm">Pico WiFi Duck v1.2.0</p>
   </footer>
   
@@ -644,20 +605,6 @@
       sendHttpRequest(data);
     });
 
-    document.getElementById('clearBtn').addEventListener('click', function() {
-      if (textarea.value.trim() === '' || confirm('Are you sure you want to clear the editor?')) {
-        textarea.value = '';
-        updateLineNumbers();
-        const statusMessage = document.getElementById('statusMessage');
-        statusMessage.textContent = 'Editor cleared!';
-        statusMessage.setAttribute('data-icon', '✓');
-        statusMessage.className = "status success";
-        setTimeout(() => {
-          statusMessage.className = "status";
-        }, 2000);
-      }
-    });
-
     document.getElementById('copyBtn').addEventListener('click', function() {
       const payloadText = document.getElementById('payload');
       payloadText.select();
@@ -672,72 +619,37 @@
       }, 2000);
     });
     
-document.getElementById('saveBtn').addEventListener('click', function() {
-  const payload = document.getElementById('payload').value;
-  const statusMessage = document.getElementById('statusMessage');
-
-  if (payload.trim() === '') {
-    statusMessage.textContent = '⚠️ Nothing to save!';
-    statusMessage.setAttribute('data-icon', '⚠');
-    statusMessage.className = "status error";
-    return;
-  }
-
-  const choice = confirm("Click OK to save on Pico, or Cancel to download to your device.");
-
-  if (choice) {
-    let filename = prompt("Enter filename to save on Pico (e.g., payload1.txt):");
-    if (!filename || filename.trim() === '') {
-      statusMessage.textContent = "⚠️ Save cancelled.";
-      statusMessage.className = "status error";
-      return;
-    }
-
-    filename = filename.trim().replace(/[^a-zA-Z0-9_\-\.]/g, "_");
-
-    fetch("http://192.168.4.1/save_payload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        filename: filename,
-        content: payload
-      })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.message) {
-        statusMessage.textContent = `💾 ${filename} saved to Pico!`;
-        statusMessage.className = "status success";
-        fetchPayloadList?.();
-      } else {
-        statusMessage.textContent = `❌ Save failed: ${data.error || "Unknown error"}`;
+    document.getElementById('saveBtn').addEventListener('click', function() {
+      const payload = document.getElementById('payload').value;
+      const statusMessage = document.getElementById('statusMessage');
+      
+      if (payload.trim() === '') {
+        statusMessage.textContent = 'Nothing to save !';
+        statusMessage.setAttribute('data-icon', '⚠');
         statusMessage.className = "status error";
+        return;
       }
-    })
-    .catch(err => {
-      console.error(err);
-      statusMessage.textContent = "❌ Network error while saving to Pico.";
-      statusMessage.className = "status error";
+      
+      const choice = confirm("Click OK to download to your device.");
+
+      if (choice) {
+        const blob = new Blob([payload], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'pico_wifi_duck_payload.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        statusMessage.textContent = 'Payload saved to your device!';
+        statusMessage.setAttribute('data-icon', '✓');
+        statusMessage.className = "status success";
+      }
+      
+      setTimeout(() => {
+        statusMessage.className = "status";
+      }, 3000);
     });
-
-  } else {
-    const blob = new Blob([payload], {type: 'text/plain'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'pico_wifi_duck_payload.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    statusMessage.textContent = 'Payload saved to your device!';
-    statusMessage.setAttribute('data-icon', '✓');
-    statusMessage.className = "status success";
-  }
-
-  setTimeout(() => {
-    statusMessage.className = "status";
-  }, 3000);
-});
 
 
     document.getElementById('payload').addEventListener('keydown', function(e) {
